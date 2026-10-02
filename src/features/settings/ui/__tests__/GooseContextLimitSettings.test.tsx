@@ -22,7 +22,7 @@ describe("GooseContextLimitSettings", () => {
   beforeEach(() => {
     save.mockReset().mockImplementation(async (value: number) => value);
     useContextLimit.mockReset().mockReturnValue({
-      contextLimit: 300_000,
+      contextLimit: 272_000,
       isHydrated: true,
       saveContextLimit: save,
     });
@@ -30,10 +30,10 @@ describe("GooseContextLimitSettings", () => {
 
   it("shows the default context budget", () => {
     render(<GooseContextLimitSettings />);
-    expect(screen.getByText("300,000 tokens")).toBeInTheDocument();
+    expect(screen.getByText("272,000 tokens")).toBeInTheDocument();
     expect(
       screen.getByRole("spinbutton", { name: "Max context tokens" }),
-    ).toHaveValue(300_000);
+    ).toHaveValue(272_000);
   });
 
   it("saves a committed slider change", async () => {
@@ -41,7 +41,7 @@ describe("GooseContextLimitSettings", () => {
     render(<GooseContextLimitSettings />);
     screen.getByRole("slider", { name: "Max context" }).focus();
     await user.keyboard("{ArrowRight}");
-    await waitFor(() => expect(save).toHaveBeenCalledWith(301_000));
+    await waitFor(() => expect(save).toHaveBeenCalledWith(273_000));
   });
 
   it("supports exact values outside the slider range without clamping them", async () => {
@@ -83,7 +83,7 @@ describe("GooseContextLimitSettings", () => {
 
   it("disables controls until config is loaded", () => {
     useContextLimit.mockReturnValue({
-      contextLimit: 300_000,
+      contextLimit: 272_000,
       isHydrated: false,
       saveContextLimit: save,
     });
@@ -104,7 +104,7 @@ describe("GooseContextLimitSettings", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Couldn’t save your context limit",
     );
-    expect(input).toHaveValue(300_000);
+    expect(input).toHaveValue(272_000);
   });
 
   it("shows the effective environment override after saving", async () => {

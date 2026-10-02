@@ -15,18 +15,18 @@ describe("Goose context defaults", () => {
     expect(config.GOOSE_AUTO_COMPACT_THRESHOLD).toBe(
       DEFAULT_AUTO_COMPACT_THRESHOLD,
     );
-    expect(DEFAULT_CONTEXT_LIMIT).toBe(300_000);
+    expect(DEFAULT_CONTEXT_LIMIT).toBe(272_000);
     expect(normalizeAutoCompactThreshold(null)).toBe(0.9);
   });
 
   it("compacts only above 90% of the default context budget", () => {
-    expect(shouldAutoCompactContext(270_000, DEFAULT_CONTEXT_LIMIT, 0.9)).toBe(
+    expect(shouldAutoCompactContext(244_800, DEFAULT_CONTEXT_LIMIT, 0.9)).toBe(
       false,
     );
-    expect(shouldAutoCompactContext(270_001, DEFAULT_CONTEXT_LIMIT, 0.9)).toBe(
+    expect(shouldAutoCompactContext(244_801, DEFAULT_CONTEXT_LIMIT, 0.9)).toBe(
       true,
     );
-    expect(shouldAutoCompactContext(300_000, DEFAULT_CONTEXT_LIMIT, 1)).toBe(
+    expect(shouldAutoCompactContext(272_000, DEFAULT_CONTEXT_LIMIT, 1)).toBe(
       false,
     );
   });

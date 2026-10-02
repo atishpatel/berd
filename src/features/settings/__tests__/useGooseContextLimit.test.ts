@@ -15,7 +15,7 @@ vi.mock("@/shared/api/acpConnection", () => ({ getClient }));
 
 describe("useGooseContextLimit", () => {
   beforeEach(() => {
-    read.mockReset().mockResolvedValue({ value: 300_000 });
+    read.mockReset().mockResolvedValue({ value: 272_000 });
     upsert.mockReset().mockResolvedValue(undefined);
     getClient.mockReset().mockResolvedValue({
       goose: {
@@ -92,7 +92,7 @@ describe("useGooseContextLimit", () => {
         "write failed",
       );
     });
-    expect(result.current.contextLimit).toBe(300_000);
+    expect(result.current.contextLimit).toBe(272_000);
   });
 
   it("retries a transient read failure without enabling controls early", async () => {

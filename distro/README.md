@@ -53,7 +53,7 @@ For local testing, a manifest can supply generic `http`/`https` values:
 
 ## Runtime effects
 
-`config.yaml` supplies the Goose context defaults: `GOOSE_CONTEXT_LIMIT: 300000`
+`config.yaml` supplies the Goose context defaults: `GOOSE_CONTEXT_LIMIT: 272000`
 and `GOOSE_AUTO_COMPACT_THRESHOLD: 0.9`. These are fallback values, not enforced
 policy: Goose loads the user's config after the bundled file and environment
 variables take precedence over both. Behavior settings save changes through
