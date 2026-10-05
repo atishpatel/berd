@@ -117,4 +117,17 @@ describe("GooseContextLimitSettings", () => {
     await user.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(input).toHaveValue(128_000));
   });
+
+  it("explains pending readback without presenting it as a failed save", () => {
+    useContextLimit.mockReturnValue({
+      contextLimit: 450_000,
+      isHydrated: true,
+      isReadbackPending: true,
+      saveContextLimit: save,
+    });
+    render(<GooseContextLimitSettings />);
+    expect(screen.getByRole("spinbutton")).toHaveValue(450_000);
+    expect(screen.getByRole("status")).toHaveTextContent("was saved");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
 });

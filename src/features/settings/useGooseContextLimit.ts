@@ -7,10 +7,12 @@ import {
 } from "@/features/chat/lib/contextLimit";
 
 const CONTEXT_LIMIT_EVENT = "goose:context-limit-preferences";
+type ContextLimitUpdate = { value: number; needsReadback: boolean };
 
 export function useGooseContextLimit() {
   const [contextLimit, setContextLimit] = useState(DEFAULT_CONTEXT_LIMIT);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isReadbackPending, setIsReadbackPending] = useState(false);
   const revision = useRef(0);
 
   useEffect(() => {
@@ -31,6 +33,7 @@ export function useGooseContextLimit() {
         // Missing config is a fallback, not a reason to overwrite user config.
         setContextLimit(parseContextLimit(value) ?? DEFAULT_CONTEXT_LIMIT);
         setIsHydrated(true);
+        setIsReadbackPending(false);
         retryDelay = 1000;
       } catch {
         if (cancelled || readRevision !== revision.current) return;
@@ -39,7 +42,24 @@ export function useGooseContextLimit() {
       }
     };
 
-    const handler = () => void sync();
+    const handler = (event: Event) => {
+      const update = (event as CustomEvent<ContextLimitUpdate>).detail;
+      if (!update || parseContextLimit(update.value) === null) {
+        void sync();
+        return;
+      }
+      // A successful write must stay represented even if ACP readback fails.
+      // Broadcast it to every control, invalidating any older in-flight reads.
+      window.clearTimeout(retryTimer);
+      revision.current += 1;
+      setContextLimit(update.value);
+      setIsHydrated(true);
+      setIsReadbackPending(update.needsReadback);
+      retryDelay = 1000;
+      if (update.needsReadback) {
+        retryTimer = window.setTimeout(() => void sync(), retryDelay);
+      }
+    };
     window.addEventListener(CONTEXT_LIMIT_EVENT, handler);
     void sync();
     return () => {
@@ -59,18 +79,27 @@ export function useGooseContextLimit() {
       isSecret: false,
     });
     revision.current += 1;
-    // Read back the effective value: an environment override may still win.
-    const { value: effectiveValue } =
-      await client.goose.GooseUnstableConfigRead({
-        key: CONTEXT_LIMIT_CONFIG_KEY,
-        isSecret: false,
-      });
-    const effectiveLimit = parseContextLimit(effectiveValue) ?? parsed;
-    setContextLimit(effectiveLimit);
-    setIsHydrated(true);
-    window.dispatchEvent(new Event(CONTEXT_LIMIT_EVENT));
+    let effectiveLimit = parsed;
+    let needsReadback = false;
+    try {
+      // An environment override may still win. Readback is reconciliation,
+      // not persistence: its failure must not turn a saved change into a rollback.
+      const { value: effectiveValue } =
+        await client.goose.GooseUnstableConfigRead({
+          key: CONTEXT_LIMIT_CONFIG_KEY,
+          isSecret: false,
+        });
+      effectiveLimit = parseContextLimit(effectiveValue) ?? parsed;
+    } catch {
+      needsReadback = true;
+    }
+    window.dispatchEvent(
+      new CustomEvent<ContextLimitUpdate>(CONTEXT_LIMIT_EVENT, {
+        detail: { value: effectiveLimit, needsReadback },
+      }),
+    );
     return effectiveLimit;
   }, []);
 
-  return { contextLimit, isHydrated, saveContextLimit };
+  return { contextLimit, isHydrated, isReadbackPending, saveContextLimit };
 }

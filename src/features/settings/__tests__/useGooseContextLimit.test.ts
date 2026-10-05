@@ -95,6 +95,58 @@ describe("useGooseContextLimit", () => {
     expect(result.current.contextLimit).toBe(272_000);
   });
 
+  it("preserves and broadcasts a saved value when readback fails, then retries the effective value", async () => {
+    vi.useFakeTimers();
+    const first = renderHook(() => useGooseContextLimit());
+    const second = renderHook(() => useGooseContextLimit());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    read.mockRejectedValue(new Error("readback failed"));
+    await act(async () => {
+      expect(await first.result.current.saveContextLimit(450_000)).toBe(
+        450_000,
+      );
+    });
+    for (const hook of [first, second]) {
+      expect(hook.result.current.contextLimit).toBe(450_000);
+      expect(hook.result.current.isHydrated).toBe(true);
+      expect(hook.result.current.isReadbackPending).toBe(true);
+    }
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+    expect(second.result.current.contextLimit).toBe(450_000);
+    expect(second.result.current.isReadbackPending).toBe(true);
+    read.mockResolvedValue({ value: 128_000 });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+    for (const hook of [first, second]) {
+      expect(hook.result.current.contextLimit).toBe(128_000);
+      expect(hook.result.current.isReadbackPending).toBe(false);
+    }
+    expect(upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it("ignores an older hydration read after a successful save", async () => {
+    let finishRead!: (result: { value: number }) => void;
+    read.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishRead = resolve;
+        }),
+    );
+    const { result } = renderHook(() => useGooseContextLimit());
+    await act(async () => {});
+    read.mockResolvedValue({ value: 450_000 });
+    await act(async () => {
+      await result.current.saveContextLimit(450_000);
+      finishRead({ value: 128_000 });
+    });
+    expect(result.current.contextLimit).toBe(450_000);
+  });
+
   it("retries a transient read failure without enabling controls early", async () => {
     vi.useFakeTimers();
     read.mockRejectedValueOnce(new Error("ACP not ready"));

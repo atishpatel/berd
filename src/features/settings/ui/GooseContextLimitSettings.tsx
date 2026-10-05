@@ -15,7 +15,8 @@ import { useGooseContextLimit } from "../useGooseContextLimit";
 export function GooseContextLimitSettings() {
   const { t } = useTranslation("settings");
   const { formatNumber } = useLocaleFormatting();
-  const { contextLimit, isHydrated, saveContextLimit } = useGooseContextLimit();
+  const { contextLimit, isHydrated, isReadbackPending, saveContextLimit } =
+    useGooseContextLimit();
   const [draft, setDraft] = useState(String(contextLimit));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -121,6 +122,11 @@ export function GooseContextLimitSettings() {
       {error ? (
         <p role="alert" className="text-[11px] text-destructive">
           {error}
+        </p>
+      ) : null}
+      {isReadbackPending ? (
+        <p role="status" className="text-[11px] text-muted-foreground">
+          {t(`${prefix}.readbackPending`)}
         </p>
       ) : null}
     </div>

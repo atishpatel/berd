@@ -108,6 +108,7 @@
         "invalid": "Introduce un número entero positivo de tokens.",
         "save": "Guardar",
         "saveError": "No se pudo guardar el límite de contexto. Inténtalo de nuevo.",
+        "readbackPending": "Se guardó el límite de contexto, pero no se pudo confirmar el valor efectivo. Se volverá a intentar; una variable de entorno puede seguir teniendo prioridad.",
         "tokens": "{{displayCount}} tokens"
       }
     },

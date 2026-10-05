@@ -108,6 +108,7 @@
         "invalid": "Enter a positive whole number of tokens.",
         "save": "Save",
         "saveError": "Couldn’t save your context limit. Try again.",
+        "readbackPending": "Your context limit was saved, but the effective value could not be confirmed. Retrying; an environment variable may still override it.",
         "tokens": "{{displayCount}} tokens"
       }
     },
