@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { i18n } from "@/shared/i18n";
 import { GooseContextLimitSettings } from "../GooseContextLimitSettings";
 
 const { useContextLimit, save } = vi.hoisted(() => ({
@@ -64,21 +65,45 @@ describe("GooseContextLimitSettings", () => {
   });
 
   it.each([
-    "",
-    "0",
-    "-1",
-    "1.5",
-  ])("does not save invalid input %s", async (value) => {
+    ["en", ""],
+    ["en", "0"],
+    ["en", "-1"],
+    ["en", "1.5"],
+    ["es", ""],
+    ["es", "0"],
+    ["es", "-1"],
+    ["es", "1.5"],
+  ])("explains invalid input in %s: %s", async (locale, value) => {
+    await i18n.changeLanguage(locale);
     const user = userEvent.setup();
     render(<GooseContextLimitSettings />);
-    const input = screen.getByRole("spinbutton", {
-      name: "Max context tokens",
-    });
+    const input = screen.getByRole("spinbutton");
     await user.clear(input);
     if (value) await user.type(input, value);
     expect(input).toHaveAttribute("aria-invalid", "true");
-    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    const explanation = i18n.t("compaction.goose.contextLimit.invalid", {
+      ns: "settings",
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent(explanation);
+    expect(input).toHaveAccessibleDescription(
+      expect.stringContaining(explanation),
+    );
+    expect(screen.getByRole("button")).toBeDisabled();
     expect(save).not.toHaveBeenCalled();
+  });
+
+  it("clears the validation explanation when the draft becomes valid", async () => {
+    const user = userEvent.setup();
+    render(<GooseContextLimitSettings />);
+    const input = screen.getByRole("spinbutton");
+    await user.clear(input);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    await user.type(input, "450000");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(input).toHaveAttribute("aria-invalid", "false");
+    expect(input).not.toHaveAccessibleDescription(
+      expect.stringContaining("Enter a positive whole number"),
+    );
   });
 
   it("disables controls until config is loaded", () => {

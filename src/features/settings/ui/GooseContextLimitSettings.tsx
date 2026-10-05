@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocaleFormatting } from "@/shared/i18n";
 import { Button } from "@/shared/ui/button";
@@ -23,6 +23,9 @@ export function GooseContextLimitSettings() {
   const saving = useRef(false);
   const prefix = "compaction.goose.contextLimit";
   const parsedDraft = parseContextLimit(draft);
+  const helperId = useId();
+  const errorId = useId();
+  const displayedError = parsedDraft === null ? t(`${prefix}.invalid`) : error;
 
   useEffect(() => setDraft(String(contextLimit)), [contextLimit]);
 
@@ -97,7 +100,7 @@ export function GooseContextLimitSettings() {
           }}
           disabled={isSaving || !isHydrated}
           aria-label={t(`${prefix}.exactLabel`)}
-          aria-describedby="goose-context-limit-helper"
+          aria-describedby={`${helperId}${displayedError ? ` ${errorId}` : ""}`}
           aria-invalid={parsedDraft === null}
           className="max-w-40"
         />
@@ -113,15 +116,12 @@ export function GooseContextLimitSettings() {
           {t(`${prefix}.save`)}
         </Button>
       </form>
-      <p
-        id="goose-context-limit-helper"
-        className="text-[11px] text-muted-foreground"
-      >
+      <p id={helperId} className="text-[11px] text-muted-foreground">
         {t(`${prefix}.helper`)}
       </p>
-      {error ? (
-        <p role="alert" className="text-[11px] text-destructive">
-          {error}
+      {displayedError ? (
+        <p id={errorId} role="alert" className="text-[11px] text-destructive">
+          {displayedError}
         </p>
       ) : null}
       {isReadbackPending ? (
