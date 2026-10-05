@@ -99,8 +99,8 @@
         "off": "Off",
         "saveError": "Couldn't save your auto-compact setting. Try again."
       },
-      "description": "Automatically compact older context and reset your token count during sessions. This only applies to chats using the Goose harness.",
-      "label": "Auto-compact (Goose harness only)",
+      "description": "Set the context budget and when older context is compacted. These settings only apply to chats using the Goose harness.",
+      "label": "Context and auto-compaction (Goose harness only)",
       "contextLimit": {
         "label": "Max context",
         "exactLabel": "Max context tokens",
@@ -112,7 +112,7 @@
         "tokens": "{{displayCount}} tokens"
       }
     },
-    "title": "Compaction"
+    "title": "Context and compaction"
   },
   "connections": {
     "configure": "Configure",
